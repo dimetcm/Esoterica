@@ -1041,7 +1041,7 @@ namespace EE::EntityModel
             // Update Gizmo
             //-------------------------------------------------------------------------
 
-            auto const gizmoResult = m_gizmo.Draw( m_selectionTransform.GetTranslation(), m_selectionTransform.GetRotation(), *m_pWorld->GetViewport() );
+            auto const gizmoResult = m_gizmo.Draw( m_selectionTransform.GetTranslation(), m_selectionTransform.GetRotation(), *pViewport );
             switch ( gizmoResult.m_state )
             {
                 case ImGuiX::Gizmo::State::StartedManipulating:
@@ -2102,6 +2102,16 @@ namespace EE::EntityModel
                 {
                     auto pSelectedItem = static_cast<OutlinerItem*>( pItem );
                     RequestDestroyEntity( pSelectedItem->m_pEntity );
+                }
+            }
+
+            if ( ImGui::IsMouseDoubleClicked( 0 ) )
+            {
+                if ( selection.size() == 1 )
+                {
+                    auto pSelectedItem = static_cast<OutlinerItem*>( selection[0] );
+                    EE_ASSERT( pSelectedItem->m_pEntity != nullptr );
+                    FocusCameraView( pSelectedItem->m_pEntity );
                 }
             }
         }

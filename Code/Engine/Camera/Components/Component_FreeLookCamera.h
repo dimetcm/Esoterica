@@ -46,6 +46,8 @@ namespace EE
         // Called whenever we explicitly set the camera position (so that derived classes can clear any buffered data)
         virtual void OnTeleport() {}
 
+        void FocusOn( Vector const& position, TArray<Vector, 8> const& bounds );
+
     protected:
 
         Radians                         m_yaw = 0;
