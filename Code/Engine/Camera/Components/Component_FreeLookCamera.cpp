@@ -68,24 +68,22 @@ namespace EE
         OnTeleport();
     }
 
-    void FreeLookCameraComponent::FocusOn( Vector const& position, TArray<Vector, 8> const& bounds )
+    void FreeLookCameraComponent::FocusOn( Vector const& position, TInlineVector<Vector, 8> const& boundingPoints )
     {
         EE_ASSERT( !Math::IsNearZero( GetViewVolume().GetFOV().ToFloat() ) );
 
         float const recipTanHalfFOV = 1.0f / Math::Tan( GetViewVolume().GetFOV().ToFloat() / 2.0f );
 
-        // find the maximum distance at which every bounds corner is inside the view volume.
+        // Find the maximum distance at which every bound point is inside the view volume.
         float maxDist = 1.0f;
-        for ( Vector const& corner : bounds )
+        for ( Vector const& bp : boundingPoints )
         {
-            Vector const centerToCorner = corner - position;
+            Vector const centerToCorner = bp - position;
             float const hDist = recipTanHalfFOV * Math::Abs( GetRightVector().GetDot3( centerToCorner ) );
             float const vDist = recipTanHalfFOV * GetViewVolume().GetAspectRatio() * Math::Abs( GetUpVector().GetDot3( centerToCorner ) );
             float const fDist = GetForwardVector().GetDot3( centerToCorner );
-
             maxDist = Math::Max( Math::Max( hDist, vDist ) + fDist, maxDist );
         }
-
         SetPositionAndLookAtDirection( position - GetForwardVector() * maxDist, GetForwardVector() );
 
         OnTeleport();
@@ -93,18 +91,14 @@ namespace EE
 
     void FreeLookCameraComponent::FocusOn( OBB const& bounds )
     {
-        TArray<Vector, 8> corners;
+        TInlineVector<Vector, 8> corners;
         bounds.GetCorners( corners.begin() );
-
         FocusOn( bounds.m_center, corners );
-
     }
-
     void FreeLookCameraComponent::FocusOn( AABB const& bounds )
     {
-        TArray<Vector, 8> corners;
+        TInlineVector<Vector, 8> corners;
         bounds.GetCorners( corners.begin() );
-        
         FocusOn( bounds.GetCenter(), corners );
     }
 

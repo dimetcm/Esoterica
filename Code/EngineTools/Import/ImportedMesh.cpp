@@ -160,8 +160,14 @@ namespace EE::Import
 
     void ImportedMesh::MergeGeometrySectionsByMaterial()
     {
+        // The set of section that can be merged together based on shared properties atm only materialID and uv channels
         struct MergeSet
         {
+            inline bool CanBeMerged( GeometrySection const& section ) const
+            {
+                return m_ID == section.m_materialNameID && m_numUVChannels == section.GetNumUVChannels();
+            }
+
             StringID                    m_ID;
             int32_t                     m_numUVChannels;
             TInlineVector<int32_t,5>    m_sectionIndices;
@@ -176,7 +182,7 @@ namespace EE::Import
             int32_t mergeSetIdx = InvalidIndex;
             for( auto j = 0; j < mergeSets.size(); j++ )
             {
-                if ( mergeSets[j].m_ID == m_geometrySections[i].m_materialNameID && mergeSets[j].m_numUVChannels == m_geometrySections[i].GetNumUVChannels() )
+                if ( mergeSets[j].CanBeMerged( m_geometrySections[i] ) )
                 {
                     mergeSetIdx = j;
                     break;
