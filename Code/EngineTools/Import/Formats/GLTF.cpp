@@ -468,7 +468,7 @@ namespace EE::Import::gltf
             return true;
         }
 
-        static void ReadMeshGeometry( gltf::SceneContext const& ctx, gltfImportedMesh& ImportedMesh, cgltf_mesh const& meshData )
+        static void ReadMeshGeometry( gltf::SceneContext const& ctx, gltfImportedMesh& ImportedMesh, cgltf_mesh const& meshData, Transform const& nodeTransform = Transform::Identity )
         {
             EE_ASSERT( IsValidTriangleMesh( meshData ) );
 
@@ -524,7 +524,7 @@ namespace EE::Import::gltf
                             {
                                 Float3 position;
                                 cgltf_accessor_read_float( primitive.attributes[a].data, i, &position.m_x, 3 );
-                                geometrySection.m_vertices[i].m_position = ctx.ApplyUpAxisCorrection( Vector( position ) );
+                                geometrySection.m_vertices[i].m_position = ctx.ApplyUpAxisCorrection( nodeTransform.TransformPoint( Vector( position ) ) );
                                 geometrySection.m_vertices[i].m_position.m_w = 1.0f;
                             }
                         }
@@ -720,49 +720,65 @@ namespace EE::Import::gltf
                 auto pSceneData = sceneCtx.GetSceneData();
                 if ( meshesToInclude.empty() )
                 {
-                    for ( auto m = 0; m < pSceneData->meshes_count; m++ )
+                    for ( auto n = 0; n < pSceneData->nodes_count; n++ )
                     {
-                        if ( IsValidTriangleMesh( pSceneData->meshes[m] ) )
+                        auto node = pSceneData->nodes[n];
+                        if ( node.mesh )
                         {
-                            ReadMeshGeometry( sceneCtx, *pImportedMesh, pSceneData->meshes[m] );
-                        }
-                        else
-                        {
-                            pImportedMesh->LogError( "Non-triangle mesh skipped: %s", pSceneData->meshes[m].name );
+                            if ( IsValidTriangleMesh( *node.mesh ) )
+                            {
+                                bool const includeParentTransform = true;
+                                Transform nodeTransform = sceneCtx.GetNodeTransform( &node, includeParentTransform );
+                                ReadMeshGeometry( sceneCtx, *pImportedMesh, *node.mesh, nodeTransform );
+                            }
+                            else
+                            {
+                                pImportedMesh->LogError( "Non-triangle mesh skipped: %s", node.mesh->name );
+                            }
                         }
                     }
                 }
                 else // Try to find the mesh to read
                 {
-                    bool meshFound = false;
-                    for ( auto m = 0; m < pSceneData->meshes_count; m++ )
-                    {
-                        if ( VectorContains( meshesToInclude, pSceneData->meshes[m].name ) )
-                        {
-                            if ( IsValidTriangleMesh( pSceneData->meshes[m] ) )
-                            {
-                                ReadMeshGeometry( sceneCtx, *pImportedMesh, pSceneData->meshes[m] );
-                            }
-                            else
-                            {
-                                pImportedMesh->LogError( "Specified mesh is not a triangle mesh: %s", pSceneData->meshes[m].name );
-                            }
+                    TVector<bool> meshFound( meshesToInclude.size(), false );
 
-                            meshFound = true;
-                            break;
+                    for ( auto n = 0; n < pSceneData->nodes_count; n++ )
+                    {
+                        auto node = pSceneData->nodes[n];
+                        if ( node.mesh )
+                        {
+                            if ( auto meshIdx = VectorFindIndex( meshesToInclude, String( node.mesh->name ) ); meshIdx != InvalidIndex )
+                            {
+                                meshFound[meshIdx] = true;
+
+                                if ( IsValidTriangleMesh( *node.mesh ) )
+                                {
+                                    bool const includeParentTransform = true;
+                                    Transform nodeTransform = sceneCtx.GetNodeTransform( &node, includeParentTransform );
+                                    ReadMeshGeometry( sceneCtx, *pImportedMesh, *node.mesh, nodeTransform );
+                                }
+                                else
+                                {
+                                    pImportedMesh->LogError( "Specified mesh is not a triangle mesh: %s", node.mesh->name );
+                                }
+                            }
                         }
                     }
 
-                    if ( !meshFound )
+                    if ( VectorContains( meshFound, false ) )
                     {
                         InlineString meshNames;
-                        for ( auto const& meshName : meshesToInclude )
-                        {
-                            meshNames.append_sprintf( "%s, ", meshName.c_str() );
-                        }
-                        meshNames = meshNames.substr( 0, meshNames.length() - 2 );
 
-                        pImportedMesh->LogError( "Failed to find any of the specified meshes in gltf file: %s", meshNames.c_str() );
+                        for ( int i = 0; i < meshesToInclude.size(); ++i )
+                        {
+                            if ( !meshFound[i] )
+                            {
+                                meshNames.append_sprintf( "%s, ", meshesToInclude[i].c_str());
+                            }
+                        }
+
+                        meshNames = meshNames.substr( 0, meshNames.length() - 2 );
+                        pImportedMesh->LogError( "Failed to find some of the specified meshes in gltf file: %s", meshNames.c_str() );
                     }
                 }
             }
