@@ -1105,45 +1105,42 @@ namespace EE::ImGuiX
 
         AxisDrawInfo* pHoveredAxisInfo = nullptr;
 
-        if ( isMouseInViewport )
+        // Bias selection to closest plane
+        int32_t const numHoveredAxes = uint32_t( axisInfo[0].m_isHovered ) + uint32_t( axisInfo[1].m_isHovered ) + uint32_t( axisInfo[2].m_isHovered );
+        if ( numHoveredAxes > 1 )
         {
-            // Bias selection to closest plane
-            int32_t const numHoveredAxes = uint32_t( axisInfo[0].m_isHovered ) + uint32_t( axisInfo[1].m_isHovered ) + uint32_t( axisInfo[2].m_isHovered );
-            if ( numHoveredAxes > 1 )
+            if ( axisInfo[0].m_isHovered && axisInfo[0].m_distanceToCamera > lowestDistanceToCamera )
             {
-                if ( axisInfo[0].m_isHovered && axisInfo[0].m_distanceToCamera > lowestDistanceToCamera )
-                {
-                    axisInfo[0].m_isHovered = false;
-                }
-
-                if ( axisInfo[1].m_isHovered && axisInfo[1].m_distanceToCamera > lowestDistanceToCamera )
-                {
-                    axisInfo[1].m_isHovered = false;
-                }
-
-                if ( axisInfo[2].m_isHovered && axisInfo[2].m_distanceToCamera > lowestDistanceToCamera )
-                {
-                    axisInfo[2].m_isHovered = false;
-                }
+                axisInfo[0].m_isHovered = false;
             }
 
-            if ( axisInfo[0].m_isHovered )
+            if ( axisInfo[1].m_isHovered && axisInfo[1].m_distanceToCamera > lowestDistanceToCamera )
             {
-                EE_ASSERT( pHoveredAxisInfo == nullptr );
-                pHoveredAxisInfo = &axisInfo[0];
+                axisInfo[1].m_isHovered = false;
             }
 
-            if ( axisInfo[1].m_isHovered )
+            if ( axisInfo[2].m_isHovered && axisInfo[2].m_distanceToCamera > lowestDistanceToCamera )
             {
-                EE_ASSERT( pHoveredAxisInfo == nullptr );
-                pHoveredAxisInfo = &axisInfo[1];
+                axisInfo[2].m_isHovered = false;
             }
+        }
 
-            if ( axisInfo[2].m_isHovered )
-            {
-                EE_ASSERT( pHoveredAxisInfo == nullptr );
-                pHoveredAxisInfo = &axisInfo[2];
-            }
+        if ( axisInfo[0].m_isHovered )
+        {
+            EE_ASSERT( pHoveredAxisInfo == nullptr );
+            pHoveredAxisInfo = &axisInfo[0];
+        }
+
+        if ( axisInfo[1].m_isHovered )
+        {
+            EE_ASSERT( pHoveredAxisInfo == nullptr );
+            pHoveredAxisInfo = &axisInfo[1];
+        }
+
+        if ( axisInfo[2].m_isHovered )
+        {
+            EE_ASSERT( pHoveredAxisInfo == nullptr );
+            pHoveredAxisInfo = &axisInfo[2];
         }
 
         axisInfo[0].m_color = ( axisInfo[0].m_isHovered ) ? g_hoveredAxisColorX : g_axisColorX;
