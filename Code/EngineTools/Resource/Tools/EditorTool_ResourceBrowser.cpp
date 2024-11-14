@@ -178,8 +178,6 @@ namespace EE::Resource
         };
 
         eastl::sort( m_allPossibleTypeFilters.begin(), m_allPossibleTypeFilters.end(), SortPredicate );
-
-        m_rebuildTree = true;
     }
 
     void ResourceBrowserEditorTool::Update( UpdateContext const& context, bool isVisible, bool isFocused )
