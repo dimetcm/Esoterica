@@ -375,7 +375,7 @@ namespace EE::Animation
             }
             else
             {
-                Error( "Root Motion Generation: No bone specified for root motion generation!" );
+                return Error( "Root Motion Generation: No bone specified for root motion generation!" );
             }
         }
 

@@ -1,0 +1,28 @@
+<Entities>
+  <Entity Name="bg 000">
+    <Components>
+      <Type TypeID="EE::Render::StaticMeshComponent">
+        <Property Path="m_name" Value="Mesh Component" />
+        <Property Path="m_transform" Value="0,-0,0,-2.71651,-5.97554,8.22148,1" />
+        <Property Path="m_mesh" Value="data://mymap/bg.msh" />
+      </Type>
+    </Components>
+    <ReferencedResources>
+      <Resource ID="data://mymap/bg.msh" />
+    </ReferencedResources>
+  </Entity>
+  <Entity Name="Entity">
+    <Components>
+      <Type TypeID="EE::DebugCameraComponent">
+        <Property Path="m_name" Value="Debug Camera Component" />
+        <Property Path="m_transform" Value="45,-0,-180,0,-5,5,1" />
+      </Type>
+    </Components>
+  </Entity>
+  <Entity Name="Entity 000">
+    <Systems>
+      <System TypeID="EE::Player::PlayerController" />
+    </Systems>
+  </Entity>
+  <Entity Name="Entity 001" />
+</Entities>
